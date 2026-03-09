@@ -8,15 +8,34 @@ const connectDB = require("./src/config/db");
 
 const datasetRoutes = require("./src/routes/datasetRoutes")
 const logRoutes = require("./src/routes/logRoutes")
+const userRoutes = require("./src/routes/userRoute")
+
+const User = require("./src/models/User")
+const bcrypt = require("bcryptjs")
 
 const app = express();
 
-connectDB()
+async function seedAdmin() {
+    const admin = await User.findOne({ role: "administrator" })
+
+    if (!admin) {
+        const password = await bcrypt.hash("kalbe123", 10)
+
+        await User.create({
+            username: "adminKalbe",
+            password: password,
+            role: "administrator"
+        })
+
+        console.log("Admin created")
+    }
+}
 
 app.use(express.json())
 
 app.use("/api/datasets", datasetRoutes)
 app.use("/api/logs", logRoutes)
+app.use("/api/users", userRoutes)
 
 app.get("/", (req, res) => {
     res.send("Kalbe Dissolution Rate API Running...")
@@ -24,6 +43,13 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 5000
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
-})
+async function startServer() {
+    await connectDB()
+    await seedAdmin()
+
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`)
+    })
+}
+
+startServer()
