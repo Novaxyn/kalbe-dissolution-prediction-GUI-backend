@@ -13,6 +13,7 @@ const predictionRoutes = require("./src/routes/predictionRoutes")
 
 const User = require("./src/models/User")
 const bcrypt = require("bcryptjs")
+const cors = require("cors")
 
 const app = express();
 
@@ -32,6 +33,7 @@ async function seedAdmin() {
     }
 }
 
+app.use(cors())
 app.use(express.json())
 
 app.use("/api/datasets", datasetRoutes)
