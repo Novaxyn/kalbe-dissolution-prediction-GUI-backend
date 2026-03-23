@@ -53,7 +53,8 @@ exports.register = async (req, res) => {
 
         await logActivity(
             "REGISTER_USER",
-            `User ${user.username} registered by ${req.user?.username || "system"}`
+            `User ${user.username} registered by ${req.user?.username || "system"}`,
+            req.user
         )
 
         res.json({
@@ -98,7 +99,12 @@ exports.login = async (req, res) => {
 
         await logActivity(
             "LOGIN",
-            `User ${user.username} logged in`
+            `User ${user.username} logged in`,
+            {
+                id:user._id,
+                role:user.role,
+                username:user.username
+            }
         )
 
         res.json({
@@ -163,7 +169,8 @@ exports.updateUser = async (req, res) => {
 
         await logActivity(
             "UPDATE_USER",
-            `User ${user.username} updated by ${req.user?.username}`
+            `User ${user.username} updated by ${req.user?.username}`,
+            req.user
         )   
 
         res.json(user)
@@ -182,6 +189,62 @@ exports.deleteuser = async (req, res) => {
         res.json({
             message: 'User deleted successfully',
         })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json(error)
+    }
+}
+
+exports.deactivateUser = async (req, res) => {
+    try {
+        const {id} = req.params
+        const {role} = req.body
+
+        const user = await User.findByIdAndUpdate(
+            id,
+            {
+                role,
+                updatedBy: req.user?.username,
+                updatedAt: Date.now(),
+            },
+            {new: true}
+        )
+
+        await logActivity(
+            "DEACTIVATE_USER",
+            `User ${user.username} deactivated by ${req.user?.username}`,
+            req.user
+        )   
+
+        res.json(user)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json(error)
+    }
+}
+
+exports.reactivateUser = async (req, res) => {
+    try {
+        const {id} = req.params
+        const {role} = req.body
+
+        const user = await User.findByIdAndUpdate(
+            id,
+            {
+                role,
+                updatedBy: req.user?.username,
+                updatedAt: Date.now(),
+            },
+            {new: true}
+        )
+
+        await logActivity(
+            "REACTIVATE_USER",
+            `User ${user.username} reactivated by ${req.user?.username}`,
+            req.user
+        )   
+
+        res.json(user)
     } catch (error) {
         console.log(error)
         res.status(500).json(error)
