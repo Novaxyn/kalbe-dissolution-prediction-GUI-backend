@@ -23,6 +23,11 @@ const datasetSchema = new mongoose.Schema({
         ref: "User",
         required: true
     },
+    statusDataset: {
+        type: String,
+        enum: ["Archived", "Active"],
+        default: "Active",
+    },
     uploadTime: {
         type: Date,
         default: Date.now

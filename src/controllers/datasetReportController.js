@@ -31,8 +31,10 @@ exports.generateDatasetReport = async () => {
                     predictionId: report?._id || null,
                     datasetName: ds.originalName,
                     uploadedBy: ds.uploadedBy._id,
+                    uploadedOn: ds.uploadTime,
                     predictionResult: report ? `Report-${baseName}` : "-",
                     reportCreatedBy: report?.generatedBy?._id || null,
+                    // reportCreatedOn: report?.generatedAt || null,
                 },
                 {
                     upsert: true, // Create if not exist
@@ -53,6 +55,28 @@ exports.getDatasetReports = async (req, res) => {
         await exports.generateDatasetReport();
 
         const reports = await DatasetReport.find({statusReport: "Active"})
+            .populate("dataSetId", "originalName")
+            .populate("uploadedBy", "username")
+            .populate("reportCreatedBy", "username")
+            .sort({ createdAt: -1 });
+
+        res.json({
+            count: reports.length,
+            data: reports,
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json(error);
+    }
+};
+
+exports.getArchivedDatasetReports = async (req, res) => {
+    try {
+        //Call generateDatasetReport
+        await exports.generateDatasetReport();
+
+        const reports = await DatasetReport.find({statusReport: "Archived"})
             .populate("dataSetId", "originalName")
             .populate("uploadedBy", "username")
             .populate("reportCreatedBy", "username")

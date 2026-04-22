@@ -80,7 +80,7 @@ exports.uploadDataset = async (req, res) => {
 // GET /api/datasets
 exports.getDatasets = async (req, res) => {
     try{
-        const datasets = await Dataset.find().populate("uploadedBy", "username").sort({ uploadTime: -1 })
+        const datasets = await Dataset.find({statusDataset: "Active"}).populate("uploadedBy", "username").sort({ uploadTime: -1 })
 
         res.status(200).json({
             count: datasets.length,
@@ -138,6 +138,35 @@ exports.updateDataset = async (req, res) => {
             message: "Error updating dataset",
             error: error.message
         })
+    }
+}
+
+exports.archiveDataset = async (req, res) => {
+    try {
+        const dataset = await Dataset.findById(req.params.id);
+
+        if (!dataset) {
+            return res.status(404).json({
+                message: "Dataset not found",
+            });
+        }
+
+        await dataset.updateOne({ statusDataset: "Archived" });
+
+        await logActivity(
+            "ARCHIVE_DATASET",
+            `Archived dataset ${dataset.originalName}`,
+            req.user
+        );
+
+        res.status(200).json({
+            message: "Dataset archived successfully",
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Error archiving dataset",
+            error: error.message,
+        });
     }
 }
 
